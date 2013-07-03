@@ -1,0 +1,256 @@
+<div class="tabs"></div>
+<div class="node">
+<span class="submitted"></span>
+<!--<div class="taxonomy"></div>-->
+<div class="content">
+                                            <script language="javascript">
+                                            document.domain = "agris.fao.org";
+                                            //Initially, do not display the AgriFeeds box
+                                            //if (document.getElementById("block-block-16"))
+                                            //document.getElementById("block-block-16").style.display = "none";
+                                            </script>
+                                            
+                                            
+                                            <script>
+                                                function trim(stringa) {
+                                                    // trim initial and leading spaces
+                                                    while (stringa.substring(0,1) == ' ') {
+                                                        stringa = stringa.substring(1, stringa.length);
+                                                    }
+                                                    while (stringa.substring(stringa.length-1, stringa.length) == ' ') {
+                                                        stringa = stringa.substring(0,stringa.length-1);
+                                                    }
+                                                    return stringa;
+                                                }
+                                                
+                                                function cleanString(text) {
+                                                    // strangely, sometimes search strings were in italics!
+                                                    search = text.replace("<I>", "");
+                                                    search = search.replace("</I>", "");
+                                                    var patt = new RegExp("", "");
+                                                    // 1: remove Lucene labels and special characters to isolate search phrase
+                                                    var strings = new Array("ARN:", "centerkey:", "center:", "language:", "title:", "alternative:", "titleSupplement:", "citationTitle:", "author:", "corporateAuthor:", "publisher:", "publicationPlace:", "publicationDate:", "agrovoc:", "subject:", "other_key:", "ISSN:", "ISBN:", "URI:", "date:", "fulltext:", "abstract:", "searchtext:", "a_spell:", ",", "%2B", "%22");
+                                                    for (i=0; i<strings.length; i++) {
+                                                        patt = new RegExp(strings[i],"gi");
+                                                        search = search.replace(patt, "");
+                                                    }
+                                                    // 2: replace logical operators with spaces to isolate search phrase
+                                                    var strings = new Array (" AND ", " OR ");
+                                                    for (i=0; i<strings.length; i++) {
+                                                        patt = new RegExp(strings[i],"gi");
+                                                        search = search.replace(patt, " ");
+                                                    }
+                                                    // optimize this :-) It removes +, " and .
+                                                    while (search.indexOf("+") > 0) {
+                                                        search = search.replace('+', '');
+                                                    }
+                                                    search = search.replace(/\"/g,"");
+                                                                            search = search.replace(/\+/g,"");
+                                                                            search = search.replace(/\./g,"");
+                                                                            search = search.replace(/\(/g,"");
+                                                                                                    search = search.replace(/\)/g,"");
+                                                                            search = trim(search);
+                                                                            // Use only the first word
+                                                                            var n = search.indexOf(" ");
+                                                                            if (n > 0)
+                                                                            search = search.substring(0, n);
+                                                                            return search;
+                                                                            }
+                                                </script>
+                                            
+                                            <!-- following script: Google feed object API -->
+                                            <script type="text/javascript" src="http://www.google.com/jsapi?key=ABQIAAAA0AS-rRhi7u7ONpbwxlJxexRVa1Nm948aiOzV985FkVuZ1GvIwRRoc2vt3a3eMWbku_J8T78sSPHAzw"></script>
+                                            
+                                            <script type="text/javascript">
+                                                google.load("feeds", "1");
+                                                
+                                                function initialize() {
+                                                    // initializes both the feed box and the Agrovoc search box
+                                                    
+                                                    // Feed box (only AgriFeeds now, potentially other feeds)
+                                                    var search = document.getElementById('searchStringAgris').innerHTML;
+                                                    search = cleanString(search);
+                                                    
+                                                    // Initialize Agrovoc search box
+                                                    // cross-browser code to copy search word to Agrovoc box
+                                                    if (parent.frames['agrovoc_search_frame'].document) {
+                                                        if (parent.frames['agrovoc_search_frame'].document.getElementById("searchString"))
+                                                        parent.frames['agrovoc_search_frame'].document.getElementById("searchString").value = search;
+                                                    }
+                                                    else
+                                                    parent.document.getElementById('agrovoc_search_frame').contentDocument.getElementById("searchString").value = search;
+                                                    
+                                                }
+                                                </script>
+                                            
+                                            <script language="javascript">
+                                                function AdjustHeight() {
+                                                    // re-size iframe depending on the height of its document
+                                                    var fr = parent.frames['agris_se'];
+                                                    var fr2 = parent.document.getElementById('agris_se');
+                                                    if (document.all && fr.document) {
+                                                        if (fr.document.body) {
+                                                            h = fr.document.body.scrollHeight + 100;
+                                                            if (h < 280)
+                                                            fr2.style.height = "280px";
+                                                            else
+                                                            fr2.style.height = h + "px";
+                                                        }
+                                                    }
+                                                    else if(fr2.contentDocument) {
+                                                        var doc1 = fr2.contentDocument;
+                                                        //old firefox
+                                                        if (doc1.height) {
+                                                            h = doc1.height + 60;
+                                                        }
+                                                        else {
+                                                            var body = doc1.getElementsByTagName('body')[0];
+                                                            h = parent.window.getComputedStyle(body, null).height;
+                                                            var length = h.length;
+                                                            h = h.substring(0, length-2);
+                                                            h = parseFloat(h) + 60;
+                                                        }
+                                                        if (h < 280)
+                                                        fr2.style.height = "280px";
+                                                        else
+                                                        fr2.style.height = h + "px";
+                                                    }
+                                                }
+                                                
+                                                function ShowSearchString() {
+                                                    /*******************
+                                                     function that should be fired everytime a search is run
+                                                     this function reads the Lucene/Solr query from the framed java app
+                                                     search box, URL-encodes it and sends it to the hidden
+                                                     "set-session-variables" frame that updates the session variables
+                                                     and refreshes the URL at the top of the page
+                                                     **********************/
+                                                    //cross-browser code for getting iframes
+                                                    var fr = parent.frames['agris_se'];
+                                                    var fr2 = parent.document.getElementById('agris_se');
+                                                    var fr3 = parent.document.getElementById('hidden_target_frame');
+                                                    var frAg = parent.frames['agrovoc_search_frame'];
+                                                    var frAg2 = parent.document.getElementById('agrovoc_search_frame');
+                                                    
+                                                    var q = "";
+                                                    var q2 = "";
+                                                    // IE
+                                                    if (!fr2.contentDocument) {
+                                                        if (fr.document.getElementById('search_query')) {
+                                                            var queries = fr.document.getElementById('search_query');
+                                                            // GET SEARCH STRING FROM SEARCHBOX IN AGRIS IFRAME
+                                                            q = queries.value;
+                                                            // if searchbox empty or URL containing Reset parameter: send
+                                                            // reset parameter to hidden iframe
+                                                            if (trim(q) == "" || fr.location.search.substring(1).indexOf("method:reset=Reset") > 0) {
+                                                                //document.getElementById("block-block-16").style.display = "none";
+                                                                document.getElementById('searchStringAgris').innerHTML = "--";
+                                                                //send reset parameter to hidden frame
+                                                                fr3.src = "http://agris.fao.org/set-session-variables?method:reset=Reset";
+                                                                frAg.document.getElementById("searchString").value = "";
+                                                                document.getElementById("block-block-11").style.display = "block";
+                                                            }
+                                                            else {
+                                                                // get remaining part of the querystring
+                                                                ind = fr.location.search.indexOf("&");
+                                                                if (ind > 0)
+                                                                q2 = fr.location.search.substring(ind);
+                                                                else
+                                                                q2 = "";
+                                                                cc = 0;
+                                                                // clean search string and copy it to the div 
+                                                                // where it can be read by Drupal
+                                                                document.getElementById('searchStringAgris').innerHTML = cleanString(q);
+                                                                //document.getElementById("block-block-16").style.display = "block";
+                                                                //news
+                                                                document.getElementById("block-block-11").style.display = "none";
+                                                                //re-initialize everytime
+                                                                initialize();
+                                                                // send Agris query parameter + remaining querystring to
+                                                                // hidden frame:
+                                                                fr3.src = "http://agris.fao.org/set-session-variables?query=" + encodeURIComponent(q) + q2;
+                                                            }
+                                                        }
+                                                    } 
+                                                    else {
+                                                        // Mozilla
+                                                        if (fr2.contentDocument) {
+                                                            if (fr2.contentDocument.getElementById('search_query')) {
+                                                                var queries=fr2.contentDocument.getElementById('search_query'); 
+                                                                
+                                                                // GET SEARCH STRING FROM SEARCHBOX IN AGRIS IFRAME
+                                                                q = queries.value;
+                                                                
+                                                                // if searchbox empty or URL containing Reset parameter: send
+                                                                // reset parameter to hidden iframe
+                                                                if (trim(q) == "" || (fr.src && fr.src.substring(1).indexOf("method:reset=Reset") > 0)) {
+                                                                    //document.getElementById("block-block-16").style.display = "none";
+                                                                    document.getElementById('searchStringAgris').innerHTML = "--";
+                                                                    //send reset parameter to hidden frame
+                                                                    fr3.src = "http://agris.fao.org/set-session-variables?method:reset=Reset";
+                                                                    if (frAg2 && frAg2.contentDocument.getElementById("searchString"))
+                                                                    frAg2.contentDocument.getElementById("searchString").value = "";
+                                                                    document.getElementById("block-block-11").style.display = "block";
+                                                                }
+                                                                // else, it is not the reset
+                                                                else {
+                                                                    // get remaining part of the querystring
+                                                                    ind = fr2.src.indexOf("&");
+                                                                    if (ind > 0)
+                                                                    q2 = fr2.src.substring(ind);
+                                                                    else
+                                                                    q2 = "";
+                                                                    cc = 0;
+                                                                    // clean search string and copy it to the div 
+                                                                    // where it can be read by Drupal
+                                                                    document.getElementById('searchStringAgris').innerHTML = cleanString(q);
+                                                                    //document.getElementById("block-block-16").style.display = "block";
+                                                                    //news
+                                                                    document.getElementById("block-block-11").style.display = "none";
+                                                                    initialize();
+                                                                    // send Agris query parameter + remaining querystring to
+                                                                    // hidden frame:
+                                                                    fr3.src = "http://agris.fao.org/set-session-variables?query="+encodeURIComponent(q)+ q2;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                </script>
+                                            
+                                            <style type="text/css">
+                                                #feedControl {
+                                                    width : 140px;
+                                                    padding : 10px;
+                                                }
+                                                </style>
+                                            
+                                            <div>
+                                                
+                                                <div id="resultsUrlDiv" style="text-align:right;display:none">
+                                                    
+                                                    <i>
+                                                        <div style="width:580px" id="resultsUrlCaption"></div><br />
+                                                        
+                                                        <div style="color:blue; width:580px" id="resultsUrl">
+                                                            <i><a style="width:580px" href="http://agris.fao.org/?query=&request_locale=en">
+                                                                http://agris.fao.org/?query=&request_locale=en</a>
+                                                                </div>
+                                                                </i>
+                                                                </div>
+                                                                
+                                                                <iframe id="agris_se" style="overflow-y:visible;overflow-x:visible" name="agris_se" frameborder="0" width="98%" height="600" style="height:600px; width:98%" onload="AdjustHeight(); ShowSearchString();"></iframe>
+                                                        </div>
+                                                        
+                                                        <div id="searchStringAgris" style="visibility:hidden"></div>
+                                                        
+                                                        <script language="javascript">
+                                                            document.getElementById('agris_se').src = "http://agris.fao.org/agris-search/search/search.do?query=&request_locale=" + "en";
+                                                            </script></div>
+                                                <!--<div class="links">&raquo; </div>-->  </div>
+                                            <div class="block block-block" id="block-block-18">
+                                                <h2 class="title"></h2>
+                                                <div class="content"><iframe id="hidden_target_frame" name="hidden_target_frame" src="" width="100" height="1" frameborder="0" style="height:1px;overflow:hidden"></iframe></div>
+                                            </div>
+                                            
+                                        </div>
